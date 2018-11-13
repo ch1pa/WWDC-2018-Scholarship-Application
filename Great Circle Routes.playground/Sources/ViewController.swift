@@ -64,8 +64,10 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
     
     public override func loadView() {
         
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
         
         self.customView.bounds = CGRect(x: 0, y: 0, width: 768, height: 1024)
         self.customView.backgroundColor = UIColor(red: 0.973, green: 0.961, blue: 0.937, alpha: 1.0)
@@ -302,7 +304,7 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
     }
     
     @objc func keyboardWillShow(notification: Notification) {
-        let size = (notification.userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue.height
+        let size = (notification.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue.height
         
         UIView.animate(withDuration: 0.3, animations:  {
             var frame = self.view.frame
@@ -390,7 +392,8 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         guard (airplanePosition + self.increment < self.geodesic.pointCount)
             else {
-                self.airplane.coordinate = MKCoordinateForMapPoint(self.points[geodesic.pointCount-1])
+                //self.airplane.coordinate = MKCoordinateForMapPoint(self.points[geodesic.pointCount-1])
+                self.airplane.coordinate = self.points[geodesic.pointCount-1].coordinate
                 speakWithLocale(airport: airportToSpeak)
                 return
         }
@@ -412,7 +415,9 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         let nextPoint = self.points[self.airplanePosition]
         
         self.airplaneDirection = directionBetweenPoints(source: previousPoint, nextPoint)
-        self.airplane.coordinate = MKCoordinateForMapPoint(nextPoint)
+        //self.airplane.coordinate = MKCoordinateForMapPoint(nextPoint)
+        
+        self.airplane.coordinate = nextPoint.coordinate
         
         if self.followCamera {
             self.cameraButton.isSelected = true
@@ -482,7 +487,8 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         // Creates MKGeodesicPolyline -- or the GCR -- from the two airport coordinates.
         self.geodesic = MKGeodesicPolyline(coordinates: [cll1.coordinate, cll2.coordinate], count: 2)
-        self.mapView.add(geodesic)
+        //self.mapView.add(geodesic)
+        self.mapView.addOverlay(geodesic)
             
         let annotation = MKPointAnnotation()
         annotation.title = (airport1 + " to " + airport2)
@@ -817,17 +823,17 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         let attributedString = NSMutableAttributedString(string: "Welcome to\nGreat Circle Route Mapper\nby Chip Beck\n￼\n\n\nWith Great Circle Route Mapper it is incredibly easy to map a great circle route between any two IATA registered airports in the world — airports like PIT (Pittsburgh), SJC (San Jose), or AKL (Auckland).\n\nAll you have to do is enter two three-letter IATA codes in the two text boxes and press \"Create Great Circle Route\".\n\nOnce created, you can follow a plane flying the route, or explore the route on your own.")
         
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"HelveticaNeue", size:14.0)!, range:NSMakeRange(0,10))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"HelveticaNeue-Bold", size:18.0)!, range:NSMakeRange(11,26))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"HelveticaNeue", size:14.0)!, range:NSMakeRange(37,13))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:12.0)!, range:NSMakeRange(50,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(54,411))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,50))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyleOne, range:NSMakeRange(50,4))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyleTwo, range:NSMakeRange(54,411))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,50))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(54,411))
-        attributedString.addAttribute(NSAttributedStringKey.attachment, value:attributedStringTextAttachment, range:NSMakeRange(50,1))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"HelveticaNeue", size:14.0)!, range:NSMakeRange(0,10))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"HelveticaNeue-Bold", size:18.0)!, range:NSMakeRange(11,26))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"HelveticaNeue", size:14.0)!, range:NSMakeRange(37,13))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:12.0)!, range:NSMakeRange(50,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(54,411))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,50))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyleOne, range:NSMakeRange(50,4))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyleTwo, range:NSMakeRange(54,411))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,50))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(54,411))
+        attributedString.addAttribute(NSAttributedString.Key.attachment, value:attributedStringTextAttachment, range:NSMakeRange(50,1))
         
         let pageOneText = UILabel(frame: CGRect.zero)
         pageOneText.attributedText = attributedString
@@ -848,12 +854,12 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         let attributedString = NSMutableAttributedString(string: "But what's a great circle route?\n\nDue to the earth's curvature and un-flatness (sorry flat-earthers), a straight line between two far away points on a rectangular 2D map is often not the shortest route. That's why many flights from the U.S. to Europe pass over Greenland.\n\nRegular 2D maps also become distorted the further the location is from the equator, so apparent distance is also not so accurate.\n\n\n\n")
         
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"HelveticaNeue-Bold", size:16.0)!, range:NSMakeRange(0,33))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(33,372))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,33))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyleOne, range:NSMakeRange(33,371))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,33))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(33,372))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"HelveticaNeue-Bold", size:16.0)!, range:NSMakeRange(0,33))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(33,372))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,33))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyleOne, range:NSMakeRange(33,371))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,33))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(33,372))
         
         let pageTwoPtOne = UILabel(frame: CGRect.zero)
         pageTwoPtOne.attributedText = attributedString
@@ -868,7 +874,7 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         let attributedStringParagraphStyle = NSMutableParagraphStyle()
         attributedStringParagraphStyle.alignment = NSTextAlignment.justified
         
-        let attributedString = NSAttributedString(string: "A great circle route accounts for the curvature, making it the shortest distance between the two points.\n\nAirlines often fly these routes as they save the most time and fuel.", attributes:[NSAttributedStringKey.foregroundColor:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0),NSAttributedStringKey.paragraphStyle:attributedStringParagraphStyle,NSAttributedStringKey.font:UIFont(name:"Helvetica", size:13.0)!])
+        let attributedString = NSAttributedString(string: "A great circle route accounts for the curvature, making it the shortest distance between the two points.\n\nAirlines often fly these routes as they save the most time and fuel.", attributes:[NSAttributedString.Key.foregroundColor:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0),NSAttributedString.Key.paragraphStyle:attributedStringParagraphStyle,NSAttributedString.Key.font:UIFont(name:"Helvetica", size:13.0)!])
         
         let pageTwoPtTwo = UILabel(frame: CGRect.zero)
         pageTwoPtTwo.attributedText = attributedString
@@ -891,16 +897,16 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         let attributedString = NSMutableAttributedString(string: "Make sure to check out...\n\n● A polar route! Fly over the poles to see how fast the airplane appears to fly as it gets further from the equator. Notice how the camera zooms in and out as the plane gets closer and farther from the equator. Try SCL to PER or JFK to PEK.\n\n● The local dialect! Over 90 countries will greet you with a special message in the local dialect through voice synthesis if you land there. Try a flight to CDG, MEX, or LHR.\n\n● The airplane's route! You can let the airplane run its course or follow it automatically to its destination.\n\n\nEnjoy!")
         
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"HelveticaNeue-Bold", size:16.0)!, range:NSMakeRange(0,27))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(27,65))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica-Oblique", size:13.0)!, range:NSMakeRange(92,7))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(99,459))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica-Bold", size:13.0)!, range:NSMakeRange(558,6))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,27))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyleOne, range:NSMakeRange(27,531))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyleTwo, range:NSMakeRange(558,6))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,27))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(27,537))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"HelveticaNeue-Bold", size:16.0)!, range:NSMakeRange(0,27))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(27,65))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica-Oblique", size:13.0)!, range:NSMakeRange(92,7))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(99,459))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica-Bold", size:13.0)!, range:NSMakeRange(558,6))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,27))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyleOne, range:NSMakeRange(27,531))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyleTwo, range:NSMakeRange(558,6))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,27))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(27,537))
         
         let pageThreeText = UILabel(frame: CGRect.zero)
         pageThreeText.attributedText = attributedString
@@ -917,10 +923,10 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         let attributedString = NSMutableAttributedString(string: "Swipe left to continue  →")
         
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:10.0)!, range:NSMakeRange(0,24))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:10.0)!, range:NSMakeRange(24,1))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,25))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.927, green:0.804, blue:0.611, alpha:1.0), range:NSMakeRange(0,25))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:10.0)!, range:NSMakeRange(0,24))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:10.0)!, range:NSMakeRange(24,1))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,25))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.927, green:0.804, blue:0.611, alpha:1.0), range:NSMakeRange(0,25))
         
         let nextLabel = UILabel(frame: CGRect.zero)
         nextLabel.attributedText = attributedString
@@ -937,22 +943,22 @@ public class ViewController: UIViewController, MKMapViewDelegate, UIGestureRecog
         
         let attributedString = NSMutableAttributedString(string: "Example IATA Airport Codes and Routes\n\n🇺🇸 : PIT (Pittsburgh), JFK (New York-John F. Kennedy), LAX (Los Angeles), SJC (San Jose), ATL (Atlanta), STL (St. Louis-Lambert)\n\n🇨🇦 : YYZ (Toronto), YUL (Montreal), YVR (Vancouver), YYC (Calgary)\n\n🇲🇽 : MEX (Mexico City), CUN (Cancun), OAX (Oaxaca), DGO (Durango)\n\n🇨🇳 : PVG (Shanghai-Pudong), PEK (Beijing-Capital), Shenzhen (SZX)\n\n🇫🇮 : HEL (Helsinki), Kittila (KTT), Tampere (TMP), Rovaniemi (RVN)\n\n🇦🇺 : SYD (Sydney), MEL (Melbourne), PER (Perth), BNE (Brisbane)\n\nSuggested Polar Routes: PER-SCL (Perth, Australia to Santiago de Chile, Chile), JFK-PEK (New York, NY, to Beijing, PRC)")
         
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"HelveticaNeue-Bold", size:16.0)!, range:NSMakeRange(0,39))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(39,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(43,128))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(171,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(175,66))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(241,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(245,65))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(310,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(314,65))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(379,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(383,66))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(449,4))
-        attributedString.addAttribute(NSAttributedStringKey.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(453,182))
-        attributedString.addAttribute(NSAttributedStringKey.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,635))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,39))
-        attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(39,596))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"HelveticaNeue-Bold", size:16.0)!, range:NSMakeRange(0,39))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(39,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(43,128))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(171,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(175,66))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(241,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(245,65))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(310,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(314,65))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(379,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(383,66))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"AppleColorEmoji", size:13.0)!, range:NSMakeRange(449,4))
+        attributedString.addAttribute(NSAttributedString.Key.font, value:UIFont(name:"Helvetica", size:13.0)!, range:NSMakeRange(453,182))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:attributedStringParagraphStyle, range:NSMakeRange(0,635))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.333, green:0.224, blue:0.0, alpha:1.0), range:NSMakeRange(0,39))
+        attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value:UIColor(red:0.352, green:0.222, blue:0.0, alpha:1.0), range:NSMakeRange(39,596))
         
         let exampleCodeLabel = UILabel(frame: .zero)
         exampleCodeLabel.attributedText = attributedString

@@ -9,7 +9,7 @@
  \
  If you want to zoom in or out on the MapView, hold down the option key while dragging the map.\
  \
- The Playground is platform agnostic, but only runs on iPad in full screen mode. Running in Xcode is preferred.\
+ The Playground is platform agnostic, but only runs on iPad in full screen mode. Running in Xcode is preferred.
  
  
 */
